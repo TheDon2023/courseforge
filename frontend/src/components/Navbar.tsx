@@ -280,6 +280,9 @@ export default function Navbar({ theme: _theme = 'dark' }: NavbarProps) {
           </div>
         </div>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   )
 }
@@ -463,9 +466,5 @@ function ApiKeySettings({ onSave }: ApiKeySettingsProps) {
         Save Keys
       </button>
     </div>
-
-    {/* Auth Modal */}
-    <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-  </>
   )
 }
