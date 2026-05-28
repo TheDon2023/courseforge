@@ -19,6 +19,7 @@ from sqlmodel import Session, select
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
+import os
 
 from database import create_db_and_tables, get_session
 from models import User, Course, Lesson, Progress, TranscriptJob, Subscription
@@ -437,6 +438,48 @@ def _normalize_transcript_video_item(item: Any) -> Dict[str, Any]:
     }
 
 
+def _build_youtube_transcript_api():
+    """
+    Build YouTubeTranscriptApi with optional proxy support.
+
+    Railway/cloud IPs are often blocked by YouTube. If proxy variables
+    are present, use them. Never return or log proxy credentials.
+    """
+    from youtube_transcript_api import YouTubeTranscriptApi
+
+    webshare_user = os.getenv("WEBSHARE_PROXY_USERNAME")
+    webshare_pass = os.getenv("WEBSHARE_PROXY_PASSWORD")
+    proxy_http = os.getenv("TRANSCRIPT_PROXY_HTTP")
+    proxy_https = os.getenv("TRANSCRIPT_PROXY_HTTPS")
+
+    if webshare_user and webshare_pass:
+        try:
+            from youtube_transcript_api.proxies import WebshareProxyConfig
+            return YouTubeTranscriptApi(
+                proxy_config=WebshareProxyConfig(
+                    proxy_username=webshare_user,
+                    proxy_password=webshare_pass,
+                )
+            )
+        except Exception:
+            # Fall through to generic/direct mode without exposing credentials.
+            pass
+
+    if proxy_http or proxy_https:
+        try:
+            from youtube_transcript_api.proxies import GenericProxyConfig
+            return YouTubeTranscriptApi(
+                proxy_config=GenericProxyConfig(
+                    http_url=proxy_http,
+                    https_url=proxy_https or proxy_http,
+                )
+            )
+        except Exception:
+            # Fall through to direct mode without exposing credentials.
+            pass
+
+    return YouTubeTranscriptApi()
+
 def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
     video_id = video.get("video_id")
 
@@ -451,28 +494,39 @@ def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     try:
-        from youtube_transcript_api import YouTubeTranscriptApi
-
         segments = []
 
         try:
-            ytt_api = YouTubeTranscriptApi()
+            ytt_api = _build_youtube_transcript_api()
             fetched = ytt_api.fetch(video_id, languages=["en"])
             segments = normalize_fetched_transcript(fetched)
-        except Exception as modern_error:
-            try:
-                fetched = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
-                segments = normalize_fetched_transcript(fetched)
-            except Exception as legacy_error:
-                return {
-                    "ok": False,
-                    "lesson_id": video.get("lesson_id"),
-                    "video_id": video_id,
-                    "title": video.get("title"),
-                    "error": "transcript_unavailable",
-                    "detail": str(legacy_error),
-                    "modern_error": str(modern_error),
-                }
+        except Exception as transcript_error:
+            error_text = str(transcript_error)
+
+            error_category = "transcript_unavailable"
+            if (
+                "blocking requests from your IP" in error_text
+                or "RequestBlocked" in error_text
+                or "IpBlocked" in error_text
+                or "cloud provider" in error_text
+            ):
+                error_category = "youtube_ip_blocked"
+
+            return {
+                "ok": False,
+                "lesson_id": video.get("lesson_id"),
+                "lessonId": video.get("lesson_id"),
+                "video_id": video_id,
+                "videoId": video_id,
+                "title": video.get("title"),
+                "error": error_category,
+                "detail": error_text,
+                "proxy_configured": bool(
+                    os.getenv("WEBSHARE_PROXY_USERNAME")
+                    or os.getenv("TRANSCRIPT_PROXY_HTTP")
+                    or os.getenv("TRANSCRIPT_PROXY_HTTPS")
+                ),
+            }
 
         text = " ".join(
             segment["text"].replace("\n", " ").strip()
@@ -484,7 +538,9 @@ def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
             return {
                 "ok": False,
                 "lesson_id": video.get("lesson_id"),
-                "video_id": video_id,
+            "lessonId": video.get("lesson_id"),
+            "video_id": video_id,
+            "videoId": video_id,
                 "title": video.get("title"),
                 "error": "empty_transcript",
                 "detail": "Transcript extraction returned no text.",
@@ -493,14 +549,20 @@ def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
 
         return {
             "ok": True,
+            "available": True,
             "source": "youtube_transcript_api",
             "lesson_id": video.get("lesson_id"),
+            "lessonId": video.get("lesson_id"),
             "video_id": video_id,
+            "videoId": video_id,
             "title": video.get("title"),
             "segment_count": len(segments),
             "character_count": len(text),
             "word_count": len(text.split()),
             "text": text,
+            "transcript": text,
+            "transcriptText": text,
+            "transcript_text": text,
             "segments": segments,
         }
 
@@ -508,7 +570,9 @@ def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "ok": False,
             "lesson_id": video.get("lesson_id"),
+            "lessonId": video.get("lesson_id"),
             "video_id": video_id,
+            "videoId": video_id,
             "title": video.get("title"),
             "error": "transcript_extraction_failed",
             "detail": str(e),
@@ -539,12 +603,17 @@ def start_transcript_job(body: TranscriptStartRequest):
         "courseId": course_id,
         "course_id": course_id,
         "status": "complete",
+        "stage": "complete",
         "progress": 100,
+        "completed": len(results),
         "total": len(results),
         "success_count": success_count,
         "failed_count": failed_count,
+        "transcript_count": success_count,
+        "available_count": success_count,
         "result": results,
         "results": results,
+        "transcripts": [r for r in results if r.get("ok") is True],
     }
 
     _TRANSCRIPT_JOBS[job_id] = job_record
@@ -712,6 +781,7 @@ def extract_transcript_direct(req: TranscriptExtractRequest):
 
         return {
             "ok": True,
+            "available": True,
             "source": "youtube_transcript_api",
             "video_id": video_id,
             "title": req.title,
@@ -730,3 +800,5 @@ def extract_transcript_direct(req: TranscriptExtractRequest):
             "error": "transcript_extraction_failed",
             "detail": str(e)
         }
+
+
