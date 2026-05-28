@@ -383,3 +383,157 @@ def get_subscription(user: User = Depends(require_user), session: Session = Depe
     if not sub:
         return {"plan": "free", "status": "active"}
     return {"plan": sub.plan, "status": sub.status, "current_period_end": sub.current_period_end}
+
+
+# ============================================================
+# Direct Transcript Extraction Endpoint
+# Adds: POST /api/transcripts/extract
+# Purpose: return the ACTUAL YouTube transcript text/segments directly.
+# ============================================================
+
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
+import re
+
+class TranscriptExtractRequest(BaseModel):
+    video_id: Optional[str] = None
+    url: Optional[str] = None
+    title: Optional[str] = None
+    languages: Optional[List[str]] = ["en"]
+
+
+def extract_youtube_video_id_from_any(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+
+    value = value.strip()
+
+    # Already a YouTube video ID
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", value):
+        return value
+
+    patterns = [
+        r"(?:\?|&)v=([A-Za-z0-9_-]{11})",
+        r"youtu\.be/([A-Za-z0-9_-]{11})",
+        r"youtube\.com/embed/([A-Za-z0-9_-]{11})",
+        r"youtube\.com/shorts/([A-Za-z0-9_-]{11})",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, value)
+        if match:
+            return match.group(1)
+
+    return None
+
+
+def normalize_fetched_transcript(fetched: Any) -> List[Dict[str, Any]]:
+    """
+    Handles both current youtube-transcript-api FetchedTranscriptSnippet objects
+    and older dict-based transcript entries.
+    """
+    segments = []
+
+    for item in fetched:
+        if isinstance(item, dict):
+            text = item.get("text", "")
+            start = item.get("start")
+            duration = item.get("duration")
+        else:
+            text = getattr(item, "text", "")
+            start = getattr(item, "start", None)
+            duration = getattr(item, "duration", None)
+
+        if text:
+            segments.append({
+                "text": text,
+                "start": start,
+                "duration": duration
+            })
+
+    return segments
+
+
+@app.post("/api/transcripts/extract")
+def extract_transcript_direct(req: TranscriptExtractRequest):
+    """
+    Direct transcript recovery endpoint.
+
+    This endpoint is intentionally simple:
+    - accepts video_id or YouTube URL
+    - calls youtube-transcript-api directly
+    - returns actual transcript text and segments
+    - does not return lesson summaries or AI-generated content
+    """
+
+    video_id = req.video_id or extract_youtube_video_id_from_any(req.url)
+
+    if not video_id:
+        return {
+            "ok": False,
+            "error": "missing_video_id",
+            "detail": "Provide either video_id or a valid YouTube URL."
+        }
+
+    languages = req.languages or ["en"]
+
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+
+        segments = []
+
+        # Current package pattern: instance + fetch(video_id)
+        try:
+            ytt_api = YouTubeTranscriptApi()
+            fetched = ytt_api.fetch(video_id, languages=languages)
+            segments = normalize_fetched_transcript(fetched)
+
+        except Exception as modern_error:
+            # Older package fallback: static get_transcript(video_id)
+            try:
+                fetched = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
+                segments = normalize_fetched_transcript(fetched)
+            except Exception as legacy_error:
+                return {
+                    "ok": False,
+                    "video_id": video_id,
+                    "error": "transcript_unavailable",
+                    "detail": str(legacy_error),
+                    "modern_error": str(modern_error)
+                }
+
+        text = " ".join(
+            segment["text"].replace("\n", " ").strip()
+            for segment in segments
+            if segment.get("text")
+        ).strip()
+
+        if not text:
+            return {
+                "ok": False,
+                "video_id": video_id,
+                "error": "empty_transcript",
+                "detail": "Transcript extraction returned no text.",
+                "segments": segments
+            }
+
+        return {
+            "ok": True,
+            "source": "youtube_transcript_api",
+            "video_id": video_id,
+            "title": req.title,
+            "languages_attempted": languages,
+            "segment_count": len(segments),
+            "character_count": len(text),
+            "word_count": len(text.split()),
+            "text": text,
+            "segments": segments
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "video_id": video_id,
+            "error": "transcript_extraction_failed",
+            "detail": str(e)
+        }
