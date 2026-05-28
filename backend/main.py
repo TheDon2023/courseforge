@@ -1,5 +1,5 @@
-"""
-CourseForge Backend — FastAPI + PostgreSQL + Auth
+﻿"""
+CourseForge Backend â€” FastAPI + PostgreSQL + Auth
 
 Provides:
 - Auth: register, login, me, logout
@@ -14,9 +14,9 @@ Run locally:
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import Session, select
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
 
@@ -28,11 +28,11 @@ from auth import (
 )
 from transcript_service import extract_transcripts_batch
 
-# ─── FastAPI app ───────────────────────────────────────────────────────────
+# â”€â”€â”€ FastAPI app â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 app = FastAPI(title="CourseForge API", version="2.0.0")
 
-# CORS — allow Railway frontend + local dev
+# CORS â€” allow Railway frontend + local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -48,21 +48,21 @@ app.add_middleware(
 )
 
 
-# ─── Startup ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ Startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
 
 
-# ─── Health ────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "courseforge-api", "version": "2.0.0"}
 
 
-# ─── Auth DTOs ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Auth DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RegisterRequest(BaseModel):
     name: str
@@ -81,7 +81,7 @@ class UserResponse(BaseModel):
     plan: str = "free"
 
 
-# ─── Auth Routes ───────────────────────────────────────────────────────────
+# â”€â”€â”€ Auth Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.post("/api/auth/register", response_model=UserResponse)
 def register(body: RegisterRequest, session: Session = Depends(get_session)):
@@ -129,11 +129,11 @@ def get_me(user: User = Depends(require_user)):
 
 @app.post("/api/auth/logout")
 def logout():
-    # JWT is stateless — logout is handled client-side by deleting the token
+    # JWT is stateless â€” logout is handled client-side by deleting the token
     return {"message": "Logged out successfully."}
 
 
-# ─── Course DTOs ───────────────────────────────────────────────────────────
+# â”€â”€â”€ Course DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class CourseCreateRequest(BaseModel):
     title: str
@@ -156,7 +156,7 @@ class CourseResponse(BaseModel):
     lessons: list = []
 
 
-# ─── Course Routes ─────────────────────────────────────────────────────────
+# â”€â”€â”€ Course Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.get("/api/courses", response_model=List[CourseResponse])
 def list_courses(
@@ -281,7 +281,7 @@ def delete_course(
     return {"message": "Course deleted."}
 
 
-# ─── Progress Routes ───────────────────────────────────────────────────────
+# â”€â”€â”€ Progress Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.get("/api/progress/{course_id}")
 def get_progress(
@@ -355,28 +355,221 @@ def update_progress(
     return {"message": "Progress saved."}
 
 
-# ─── Transcript Routes (existing) ──────────────────────────────────────────
+# â”€â”€â”€ Transcript Routes (existing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TranscriptStartRequest(BaseModel):
-    course_id: str
-    videos: list
+    # Accept both backend snake_case and frontend camelCase
+    course_id: Optional[str] = None
+    courseId: Optional[str] = None
+    videos: List[Any] = Field(default_factory=list)
+
+
+_TRANSCRIPT_JOBS: Dict[str, Dict[str, Any]] = {}
+
+
+def _extract_video_id_from_any(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+
+    value = value.strip()
+
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", value):
+        return value
+
+    patterns = [
+        r"(?:\?|&)v=([A-Za-z0-9_-]{11})",
+        r"youtu\.be/([A-Za-z0-9_-]{11})",
+        r"youtube\.com/embed/([A-Za-z0-9_-]{11})",
+        r"youtube\.com/shorts/([A-Za-z0-9_-]{11})",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, value)
+        if match:
+            return match.group(1)
+
+    return None
+
+
+def _normalize_transcript_video_item(item: Any) -> Dict[str, Any]:
+    if isinstance(item, str):
+        video_id = _extract_video_id_from_any(item)
+        return {
+            "lesson_id": None,
+            "video_id": video_id,
+            "title": None,
+            "url": item if item.startswith("http") else (
+                f"https://www.youtube.com/watch?v={video_id}" if video_id else None
+            ),
+        }
+
+    if not isinstance(item, dict):
+        return {
+            "lesson_id": None,
+            "video_id": None,
+            "title": None,
+            "url": None,
+        }
+
+    raw_video_id = (
+        item.get("video_id")
+        or item.get("videoId")
+        or item.get("id")
+        or item.get("youtubeId")
+    )
+
+    raw_url = (
+        item.get("url")
+        or item.get("sourceUrl")
+        or item.get("source_url")
+        or item.get("video_url")
+        or item.get("videoUrl")
+        or item.get("youtubeUrl")
+    )
+
+    video_id = raw_video_id or _extract_video_id_from_any(raw_url)
+
+    return {
+        "lesson_id": item.get("lesson_id") or item.get("lessonId"),
+        "video_id": video_id,
+        "title": item.get("title"),
+        "url": raw_url or (f"https://www.youtube.com/watch?v={video_id}" if video_id else None),
+    }
+
+
+def _extract_one_transcript_for_job(video: Dict[str, Any]) -> Dict[str, Any]:
+    video_id = video.get("video_id")
+
+    if not video_id:
+        return {
+            "ok": False,
+            "lesson_id": video.get("lesson_id"),
+            "video_id": None,
+            "title": video.get("title"),
+            "error": "missing_video_id",
+            "detail": "Could not determine video ID from video item.",
+        }
+
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+
+        segments = []
+
+        try:
+            ytt_api = YouTubeTranscriptApi()
+            fetched = ytt_api.fetch(video_id, languages=["en"])
+            segments = normalize_fetched_transcript(fetched)
+        except Exception as modern_error:
+            try:
+                fetched = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
+                segments = normalize_fetched_transcript(fetched)
+            except Exception as legacy_error:
+                return {
+                    "ok": False,
+                    "lesson_id": video.get("lesson_id"),
+                    "video_id": video_id,
+                    "title": video.get("title"),
+                    "error": "transcript_unavailable",
+                    "detail": str(legacy_error),
+                    "modern_error": str(modern_error),
+                }
+
+        text = " ".join(
+            segment["text"].replace("\n", " ").strip()
+            for segment in segments
+            if segment.get("text")
+        ).strip()
+
+        if not text:
+            return {
+                "ok": False,
+                "lesson_id": video.get("lesson_id"),
+                "video_id": video_id,
+                "title": video.get("title"),
+                "error": "empty_transcript",
+                "detail": "Transcript extraction returned no text.",
+                "segments": segments,
+            }
+
+        return {
+            "ok": True,
+            "source": "youtube_transcript_api",
+            "lesson_id": video.get("lesson_id"),
+            "video_id": video_id,
+            "title": video.get("title"),
+            "segment_count": len(segments),
+            "character_count": len(text),
+            "word_count": len(text.split()),
+            "text": text,
+            "segments": segments,
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "lesson_id": video.get("lesson_id"),
+            "video_id": video_id,
+            "title": video.get("title"),
+            "error": "transcript_extraction_failed",
+            "detail": str(e),
+        }
 
 
 @app.post("/api/transcripts/start")
 def start_transcript_job(body: TranscriptStartRequest):
-    """Delegate to the transcript service."""
-    # Simplified — extract and return immediately for now
-    # Full async job handling can be added later
-    return {"jobId": str(uuid.uuid4()), "status": "queued"}
+    course_id = body.course_id or body.courseId
+
+    if not course_id:
+        raise HTTPException(status_code=422, detail="course_id or courseId is required.")
+
+    if not body.videos or not isinstance(body.videos, list):
+        raise HTTPException(status_code=422, detail="videos must be a non-empty array.")
+
+    job_id = str(uuid.uuid4())
+
+    normalized_videos = [_normalize_transcript_video_item(v) for v in body.videos]
+    results = [_extract_one_transcript_for_job(v) for v in normalized_videos]
+
+    success_count = len([r for r in results if r.get("ok") is True])
+    failed_count = len(results) - success_count
+
+    job_record = {
+        "jobId": job_id,
+        "job_id": job_id,
+        "courseId": course_id,
+        "course_id": course_id,
+        "status": "complete",
+        "progress": 100,
+        "total": len(results),
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "result": results,
+        "results": results,
+    }
+
+    _TRANSCRIPT_JOBS[job_id] = job_record
+    return job_record
 
 
 @app.get("/api/transcripts/status/{job_id}")
 def get_transcript_status(job_id: str):
-    return {"jobId": job_id, "status": "complete", "progress": 100, "result": []}
+    job = _TRANSCRIPT_JOBS.get(job_id)
+
+    if not job:
+        return {
+            "jobId": job_id,
+            "job_id": job_id,
+            "status": "not_found",
+            "progress": 0,
+            "result": [],
+            "results": [],
+            "detail": "Transcript job not found. Jobs are stored in memory on this deployment instance.",
+        }
+
+    return job
 
 
 # ─── Subscription Placeholder ──────────────────────────────────────────────
-
 @app.get("/api/subscription")
 def get_subscription(user: User = Depends(require_user), session: Session = Depends(get_session)):
     sub = session.exec(select(Subscription).where(Subscription.user_id == user.id)).first()
@@ -391,7 +584,7 @@ def get_subscription(user: User = Depends(require_user), session: Session = Depe
 # Purpose: return the ACTUAL YouTube transcript text/segments directly.
 # ============================================================
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Dict, Any
 from pydantic import BaseModel
 import re
 
