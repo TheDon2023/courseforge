@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import {
   generateCourseWithAI,
   fetchChannelVideos,
   fetchPlaylistVideos,
+  fetchSingleVideo,
 } from '../components/dashboard/api';
 import type { YouTubeVideo } from '../components/dashboard/api';
 import {
@@ -26,7 +27,7 @@ import SettingsDrawer from '../components/dashboard/SettingsDrawer';
 
 const easeOut = [0.4, 0, 0.2, 1] as [number, number, number, number];
 
-/* ─── System Health Badge ─── */
+/* â”€â”€â”€ System Health Badge â”€â”€â”€ */
 function SystemHealthBar() {
   const [ytStatus, setYtStatus] = useState<ConnectionTestResult['status']>('no_key');
   const [orStatus, setOrStatus] = useState<ConnectionTestResult['status']>('no_key');
@@ -139,18 +140,22 @@ export default function Dashboard() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [refreshCourses]);
 
-  // Handle create course from modal (supports both channels and playlists)
+  // Handle create course from modal (supports channels, playlists, and single videos)
   const handleCreateCourse = useCallback(async (result: ChannelSearchResult) => {
     setCreateModalOpen(false);
     setGenerating(true);
 
-    const { info: channelInfo, playlistId, isPlaylist } = result;
+    const { info: channelInfo, playlistId, isPlaylist, videoId, isVideo } = result;
     if (!channelInfo) { setGenerating(false); return; }
 
     let videoData: YouTubeVideo[] = [];
 
     try {
-      if (isPlaylist && playlistId) {
+      if (isVideo && videoId) {
+        console.log('[Dashboard] Fetching single video:', videoId);
+        const video = await fetchSingleVideo(videoId);
+        videoData = video ? [video] : [];
+      } else if (isPlaylist && playlistId) {
         console.log('[Dashboard] Fetching playlist videos:', playlistId);
         const videos = await fetchPlaylistVideos(playlistId);
         videoData = videos.slice(0, 10);
@@ -193,7 +198,7 @@ export default function Dashboard() {
         if (transcriptVideos.length > 0) {
           console.log('[Dashboard] Starting transcript extraction for', transcriptVideos.length, 'videos')
 
-          // Run in background — don't block navigation
+          // Run in background â€” don't block navigation
           extractTranscriptsWithPolling(
             newCourse.id,
             transcriptVideos,
@@ -227,8 +232,8 @@ export default function Dashboard() {
         }
       }
     } catch {
-      // Backend not available — transcripts will use description fallback
-      console.log('[Dashboard] Transcript backend unavailable — using description fallback')
+      // Backend not available â€” transcripts will use description fallback
+      console.log('[Dashboard] Transcript backend unavailable â€” using description fallback')
     }
 
     navigate(`/app/course/${newCourse.id}`);
@@ -382,3 +387,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

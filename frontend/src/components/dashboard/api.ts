@@ -1,4 +1,4 @@
-import type { Course, Module, Lesson } from '../../types/course';
+﻿import type { Course, Module, Lesson } from '../../types/course';
 import type { YouTubeChannelInfo, GenerationStep } from './types';
 import { callOpenRouterWithFallback } from '../../lib/AiProvider';
 
@@ -147,6 +147,29 @@ export function extractPlaylistId(url: string): string | null {
   return null;
 }
 
+/** Extract a single YouTube video ID from watch, youtu.be, shorts, embed, or raw 11-character ID. */
+export function extractYouTubeVideoId(input: string): string | null {
+  const value = input.trim();
+
+  if (/^[a-zA-Z0-9_-]{11}$/.test(value)) {
+    return value;
+  }
+
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+
+  return null;
+}
+
 export interface ChannelSearchResult {
   info: YouTubeChannelInfo | null;
   error?: string;
@@ -154,6 +177,12 @@ export interface ChannelSearchResult {
   playlistId?: string;
   /** If true, this is a playlist-based course, not a channel-based course */
   isPlaylist?: boolean;
+  /** If the input was a single YouTube video, this contains the video ID */
+  videoId?: string;
+  /** If true, this is a single-video course, not channel/playlist based */
+  isVideo?: boolean;
+  /** Original source URL for a single video */
+  sourceUrl?: string;
 }
 
 export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSearchResult> {
@@ -164,7 +193,7 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
   if (playlistId) {
     if (!youtubeKey) {
       return {
-        info: { id: `pl-${playlistId}`, name: 'Playlist Course', handle: `@playlist`, thumbnail: '', subscriberCount: '—', videoCount: '—', demo: true },
+        info: { id: `pl-${playlistId}`, name: 'Playlist Course', handle: `@playlist`, thumbnail: '', subscriberCount: 'â€”', videoCount: 'â€”', demo: true },
         playlistId, isPlaylist: true,
       };
     }
@@ -176,12 +205,67 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
       if (!data.items?.length) return { info: null, error: 'Playlist not found. Check the URL and try again.' };
       const pl = data.items[0];
       return {
-        info: { id: `pl-${playlistId}`, name: pl.snippet.title || 'Untitled Playlist', handle: `@playlist`, thumbnail: pl.snippet.thumbnails?.high?.url || pl.snippet.thumbnails?.default?.url || '', subscriberCount: '—', videoCount: '—' },
+        info: { id: `pl-${playlistId}`, name: pl.snippet.title || 'Untitled Playlist', handle: `@playlist`, thumbnail: pl.snippet.thumbnails?.high?.url || pl.snippet.thumbnails?.default?.url || '', subscriberCount: 'â€”', videoCount: 'â€”' },
         playlistId, isPlaylist: true,
       };
     } catch (err) {
       console.error('Error fetching playlist:', err);
       return { info: null, error: 'Network error fetching playlist.' };
+    }
+  }
+
+  // Check if input is a single YouTube video URL or raw video ID.
+  // Important: this must happen before channel lookup, or watch?v= URLs are misread as channels.
+  const videoId = extractYouTubeVideoId(query);
+  if (videoId) {
+    const sourceUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    if (!youtubeKey) {
+      return {
+        info: {
+          id: `video-${videoId}`,
+          name: 'Single YouTube Video Course',
+          handle: '@video',
+          thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          subscriberCount: '—',
+          videoCount: '1',
+          demo: true,
+        },
+        videoId,
+        isVideo: true,
+        sourceUrl,
+      };
+    }
+
+    try {
+      const trimmedKey = youtubeKey.trim();
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${trimmedKey}`
+      );
+      const data = await res.json();
+
+      if (data.error) return { info: null, error: `Video API error: ${data.error.message}` };
+      if (!data.items?.length) return { info: null, error: 'Video not found. Check the URL and try again.' };
+
+      const video = data.items[0];
+      const snippet = video.snippet || {};
+
+      return {
+        info: {
+          id: `video-${videoId}`,
+          name: snippet.title || 'Single YouTube Video Course',
+          handle: snippet.channelTitle || '@video',
+          thumbnail: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          subscriberCount: '—',
+          videoCount: '1',
+        },
+        videoId,
+        isVideo: true,
+        sourceUrl,
+      };
+    } catch (err) {
+      console.error('Error fetching video:', err);
+      return { info: null, error: 'Network error fetching video.' };
     }
   }
 
@@ -200,8 +284,8 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
         name,
         handle: displayHandle,
         thumbnail: avatarUrl,
-        subscriberCount: '—',
-        videoCount: '—',
+        subscriberCount: 'â€”',
+        videoCount: 'â€”',
         demo: true,
       }
     };
@@ -219,8 +303,8 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
     }
 
     if (handle) {
-      // Use forHandle parameter for @username lookups — more accurate and cheaper (1 quota unit)
-      // Pass handle WITHOUT @ prefix — YouTube accepts either, plain is simpler
+      // Use forHandle parameter for @username lookups â€” more accurate and cheaper (1 quota unit)
+      // Pass handle WITHOUT @ prefix â€” YouTube accepts either, plain is simpler
       apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${encodeURIComponent(handle)}&key=${trimmedKey}`;
     } else {
       // Fallback: use search endpoint for generic name queries
@@ -246,7 +330,7 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
       if (err.code === 403) {
         const reason = err.errors?.[0]?.reason;
         if (reason === 'accessNotConfigured') {
-          return { info: null, error: 'YouTube Data API v3 is not enabled. Go to Google Cloud Console → APIs & Services → Library → Enable "YouTube Data API v3".' };
+          return { info: null, error: 'YouTube Data API v3 is not enabled. Go to Google Cloud Console â†’ APIs & Services â†’ Library â†’ Enable "YouTube Data API v3".' };
         }
         if (reason === 'quotaExceeded') {
           return { info: null, error: 'YouTube API quota exceeded. Try again tomorrow or use a different key.' };
@@ -282,7 +366,7 @@ export async function fetchYouTubeChannelInfo(query: string): Promise<ChannelSea
         }
       };
     } else {
-      // Search response — need second call for statistics
+      // Search response â€” need second call for statistics
       const searchResult = data.items[0];
       const cid = searchResult.id.channelId;
 
@@ -325,6 +409,57 @@ export interface YouTubeVideo {
   thumbnailUrl: string;
   sourceUrl: string;
   publishedAt?: string;
+}
+
+export async function fetchSingleVideo(videoId: string): Promise<YouTubeVideo | null> {
+  const { youtubeKey } = getApiKeys();
+  const sourceUrl = `https://youtube.com/watch?v=${videoId}`;
+
+  if (!youtubeKey) {
+    return {
+      id: videoId,
+      videoId,
+      title: 'Single YouTube Video',
+      description: '',
+      duration: '10:00',
+      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      sourceUrl,
+    };
+  }
+
+  try {
+    const trimmedKey = youtubeKey.trim();
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${trimmedKey}`
+    );
+    const data = await res.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || 'YouTube video API error');
+    }
+
+    if (!data.items?.length) {
+      return null;
+    }
+
+    const video = data.items[0];
+    const snippet = video.snippet || {};
+    const duration = video.contentDetails?.duration || '';
+
+    return {
+      id: videoId,
+      videoId,
+      title: snippet.title || 'Single YouTube Video',
+      description: snippet.description || '',
+      duration: formatISODuration(duration),
+      thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      sourceUrl,
+      publishedAt: snippet.publishedAt || undefined,
+    };
+  } catch (err) {
+    console.error('[fetchSingleVideo] Error:', err);
+    return null;
+  }
 }
 
 export async function fetchChannelVideos(channelId: string): Promise<YouTubeVideo[]> {
@@ -660,7 +795,7 @@ Instructions:
       };
     }
 
-    // AI response couldn't be parsed — generate from videos directly
+    // AI response couldn't be parsed â€” generate from videos directly
     console.log('[CourseForge] AI response unparseable, using video-based generation');
     return generateCourseFromVideos(channelInfo, videoData);
   } catch (error) {
@@ -670,7 +805,7 @@ Instructions:
 }
 
 /**
- * Generate a course directly from video titles — NO AI needed.
+ * Generate a course directly from video titles â€” NO AI needed.
  * Groups videos into modules, uses REAL video IDs.
  * Only falls back to SAMPLE_COURSE if there are zero videos.
  */
@@ -739,3 +874,4 @@ function stringToColor(str: string): string {
   const c = (hash & 0x00FFFFFF).toString(16).toUpperCase().padStart(6, '0');
   return c;
 }
+

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -139,7 +139,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit }: CreateC
                 fontWeight: 300,
               }}
             >
-              Paste a YouTube channel URL, playlist URL, or search by name
+              Paste a YouTube video URL, playlist URL, channel URL, or search by name
             </p>
 
             {/* Settings Panel */}
@@ -221,7 +221,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit }: CreateC
                   value={url}
                   onChange={(e) => { setUrl(e.target.value); setError(''); }}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Enter YouTube channel URL or name..."
+                  placeholder="Enter YouTube video, playlist, channel URL, or name..."
                   className="w-full rounded-xl py-3 pl-10 pr-4 text-sm outline-none transition-all focus:ring-2"
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -331,7 +331,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit }: CreateC
                           style={{ color: 'var(--stone)', fontFamily: "'Inter', sans-serif" }}
                         >
                           {channelInfo.demo ? (
-                            <span style={{ color: 'var(--cyan)', fontStyle: 'italic' }}>Demo preview — Add API key for real stats</span>
+                            <span style={{ color: 'var(--cyan)', fontStyle: 'italic' }}>Demo preview â€” Add API key for real stats</span>
                           ) : (
                             <>{channelInfo.videoCount} videos &bull; {channelInfo.subscriberCount} subscribers</>
                           )}
@@ -468,7 +468,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit }: CreateC
                   className="text-xs font-light"
                   style={{ color: 'var(--stone)', fontFamily: "'Inter', sans-serif" }}
                 >
-                  Examples: youtube.com/@channelname, @channelname, or paste a full channel URL.
+                  Examples: youtube.com/watch?v=VIDEO_ID, youtu.be/VIDEO_ID, youtube.com/@channelname, or playlist URL.
                   No API key? A demo course will be created.
                 </p>
               </div>
@@ -479,3 +479,4 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit }: CreateC
     </AnimatePresence>
   );
 }
+
