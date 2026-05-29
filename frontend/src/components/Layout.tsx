@@ -8,8 +8,8 @@ export default function Layout() {
   const { theme } = useTheme()
 
   useEffect(() => {
-    document.body.style.backgroundColor = theme === 'dark' ? '#000000' : '#FDFBF6'
-    document.body.style.color = theme === 'dark' ? '#FFFFFF' : '#0A2E52'
+    document.body.style.backgroundColor = theme === 'dark' ? '#000000' : '#1E5FA8'
+    document.body.style.color = '#FFFFFF'
   }, [theme])
 
   return (
@@ -22,4 +22,5 @@ export default function Layout() {
     </div>
   )
 }
+
 

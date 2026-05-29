@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -102,11 +102,43 @@
 }
 
 /* ============================================================
-   CourseForge Dark Theme Override
-   Goal: dark mode = black backgrounds, gray gradients/buttons,
-   white text. Light theme remains unchanged.
+   CourseForge Theme Refinement
+   Light theme: lighter blue gradients, mostly white text.
+   Dark theme: black/gray gradients, mostly white text.
+   Rule: text on light backgrounds/buttons must be black.
    ============================================================ */
 
+/* LIGHT THEME: keep CourseForge blue identity, but make blues lighter. */
+html.light,
+html[data-theme="light"],
+.light {
+  --abyss: #1E5FA8 !important;
+  --deep: #2F75B8 !important;
+  --navy: #3F8DCC !important;
+  --azure: #5AB4E8 !important;
+  --sky: #77D4F2 !important;
+  --cyan: #B8F0FF !important;
+  --ice: #FFFFFF !important;
+  --parchment: #FDFBF6 !important;
+  --sand: #F4F0E8 !important;
+  --deep-ink: #FFFFFF !important;
+  --stone: #EAF4F8 !important;
+  --muted: #EAF4F8 !important;
+
+  --gradient-hero: linear-gradient(135deg, #1E5FA8 0%, #3F8DCC 45%, #77D4F2 100%) !important;
+  --gradient-accent: linear-gradient(135deg, #5AB4E8 0%, #B8F0FF 100%) !important;
+  --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.10) 100%) !important;
+  --gradient-button: linear-gradient(135deg, #9BE7FA 0%, #CAF0F8 100%) !important;
+  --overlay-dark: rgba(30, 95, 168, 0.45) !important;
+}
+
+html.light body,
+html[data-theme="light"] body {
+  background: var(--gradient-hero) !important;
+  color: #FFFFFF !important;
+}
+
+/* DARK THEME: black/gray/white only, preserving gradients/fades. */
 html.dark,
 html[data-theme="dark"],
 .dark {
@@ -131,72 +163,110 @@ html[data-theme="dark"],
 }
 
 html.dark body,
-html[data-theme="dark"] body,
-.dark body {
+html[data-theme="dark"] body {
   background: #000000 !important;
   color: #FFFFFF !important;
 }
 
-/* Make common text inherit white in dark mode, including hardcoded dark text. */
-html.dark,
+/* Main text on gradient/dark backgrounds should be white. */
+html.light body,
+html.light body :where(h1,h2,h3,h4,h5,h6,p,span,a,li,label,small,div),
 html.dark body,
-html.dark body *,
-html[data-theme="dark"],
-html[data-theme="dark"] body,
-html[data-theme="dark"] body *,
-.dark,
-.dark * {
-  color: #FFFFFF;
+html.dark body :where(h1,h2,h3,h4,h5,h6,p,span,a,li,label,small,div) {
+  color: inherit;
 }
 
-/* Preserve semantic colored status text where needed. */
-html.dark .text-red-500,
-html.dark .text-red-400,
-html.dark [style*="#FF6B6B"] {
-  color: #FF6B6B !important;
-}
-
-html.dark .text-green-500,
-html.dark .text-emerald-500,
-html.dark [style*="#00FF00"] {
-  color: #00FF00 !important;
-}
-
-/* Convert white/light cards to black-gray cards in dark mode. */
-html.dark .bg-white,
-html.dark .bg-white\/60,
-html.dark .bg-white\/70,
-html.dark .bg-white\/80,
-html.dark .bg-white\/90,
-html.dark [class*="bg-white"] {
-  background-color: rgba(24, 24, 27, 0.92) !important;
+/* Force obvious page/hero/nav text white in both themes. */
+html.light main,
+html.light nav,
+html.light header,
+html.light footer,
+html.dark main,
+html.dark nav,
+html.dark header,
+html.dark footer {
   color: #FFFFFF !important;
 }
 
-/* Convert common blue hardcoded panels/buttons into gray gradients in dark mode. */
-html.dark [style*="#03045E"],
-html.dark [style*="#07165C"],
-html.dark [style*="#0077B6"],
-html.dark [style*="#00B4D8"],
-html.dark [style*="#48CAE4"],
-html.dark [style*="#90E0EF"],
-html.dark [style*="#CAF0F8"] {
-  color: #FFFFFF !important;
-}
-
-/* Dark buttons: gray gradient with white text. */
+/* Buttons are gradients; text should be white unless button is very light. */
+html.light button,
+html.light a[role="button"],
 html.dark button,
 html.dark a[role="button"] {
   color: #FFFFFF;
 }
 
+html.light button[style*="linear-gradient"],
+html.light a[style*="linear-gradient"],
 html.dark button[style*="linear-gradient"],
 html.dark a[style*="linear-gradient"] {
-  background: linear-gradient(135deg, #4B5563 0%, #6B7280 100%) !important;
+  background: var(--gradient-button) !important;
+}
+
+/* Light blue / white buttons need black text for readability. */
+html.light button[class*="bg-[#CAF0F8]"],
+html.light button[class*="bg-white"],
+html.light button[class*="from-[#90E0EF]"],
+html.light button[class*="to-[#CAF0F8]"],
+html.light a[class*="bg-[#CAF0F8]"],
+html.light a[class*="bg-white"],
+html.dark button[class*="bg-[#CAF0F8]"],
+html.dark button[class*="bg-white"],
+html.dark button[class*="from-[#90E0EF]"],
+html.dark button[class*="to-[#CAF0F8]"],
+html.dark a[class*="bg-[#CAF0F8]"],
+html.dark a[class*="bg-white"] {
+  color: #000000 !important;
+}
+
+/* Any true light card/surface should have black text in both themes. */
+html.light .bg-white,
+html.light .bg-white\/5,
+html.light .bg-white\/10,
+html.light .bg-white\/60,
+html.light .bg-white\/70,
+html.light .bg-white\/80,
+html.light .bg-white\/90,
+html.light [class*="bg-white"],
+html.dark .bg-white,
+html.dark .bg-white\/60,
+html.dark .bg-white\/70,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90 {
+  color: #000000 !important;
+}
+
+/* But translucent dark overlays should stay white. */
+html.light .bg-white\/5,
+html.light .bg-white\/10,
+html.dark .bg-white\/5,
+html.dark .bg-white\/10 {
   color: #FFFFFF !important;
 }
 
-/* Inputs and modal fields in dark mode. */
+/* Dark theme white cards should become gray cards, not white cards. */
+html.dark .bg-white,
+html.dark .bg-white\/60,
+html.dark .bg-white\/70,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark [class*="bg-white/60"],
+html.dark [class*="bg-white/70"],
+html.dark [class*="bg-white/80"],
+html.dark [class*="bg-white/90"] {
+  background-color: rgba(24, 24, 27, 0.94) !important;
+  color: #FFFFFF !important;
+}
+
+/* Inputs and form fields. */
+html.light input,
+html.light textarea,
+html.light select {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #000000 !important;
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}
+
 html.dark input,
 html.dark textarea,
 html.dark select {
@@ -205,18 +275,45 @@ html.dark select {
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #374151 !important;
+}
+
 html.dark input::placeholder,
 html.dark textarea::placeholder {
   color: #D1D5DB !important;
 }
 
-/* Utility classes for future components. */
-html.dark .cf-dark-surface {
-  background: linear-gradient(135deg, #0A0A0A 0%, #1F1F1F 100%) !important;
-  color: #FFFFFF !important;
+/* Preserve important status colors. */
+html.light .text-red-500,
+html.light .text-red-400,
+html.dark .text-red-500,
+html.dark .text-red-400 {
+  color: #FF6B6B !important;
 }
 
-html.dark .cf-dark-button {
-  background: linear-gradient(135deg, #4B5563 0%, #6B7280 100%) !important;
+html.light .text-green-500,
+html.light .text-emerald-500,
+html.dark .text-green-500,
+html.dark .text-emerald-500 {
+  color: #00FF00 !important;
+}
+
+/* Utility classes for future components. */
+.cf-theme-surface {
+  background: var(--gradient-card) !important;
+  color: var(--deep-ink) !important;
+}
+
+.cf-theme-button {
+  background: var(--gradient-button) !important;
+}
+
+html.light .cf-theme-button {
+  color: #000000 !important;
+}
+
+html.dark .cf-theme-button {
   color: #FFFFFF !important;
 }
