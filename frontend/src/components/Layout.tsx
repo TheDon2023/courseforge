@@ -1,16 +1,11 @@
-import { Outlet, useLocation } from 'react-router-dom'
-import { useEffect, useMemo } from 'react'
+﻿import { useEffect } from 'react'
+import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Footer from './Footer'
+import { useTheme } from '../hooks/use-theme'
 
 export default function Layout() {
-  const location = useLocation()
-
-  const theme = useMemo(() => {
-    const path = location.pathname
-    if (path === '/' || path === '/app') return 'dark'
-    return 'light'
-  }, [location.pathname])
+  const { theme } = useTheme()
 
   useEffect(() => {
     document.body.style.backgroundColor = theme === 'dark' ? '#03045E' : '#FDFBF6'
@@ -18,7 +13,7 @@ export default function Layout() {
   }, [theme])
 
   return (
-    <div className={theme === 'dark' ? 'dark' : ''} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div className={theme === 'dark' ? 'dark' : 'light'} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <Navbar theme={theme} />
       <main style={{ flex: 1 }}>
         <Outlet />
