@@ -5,6 +5,30 @@ type Theme = 'dark' | 'light'
 const STORAGE_KEY = 'courseforge_theme'
 const THEME_EVENT = 'courseforge-theme-change'
 
+const DARK_VARS: Record<string, string> = {
+  '--abyss': '#03045E',
+  '--deep': '#02033D',
+  '--navy': '#07165C',
+  '--ice': '#CAF0F8',
+  '--cyan': '#90E0EF',
+  '--sky': '#48CAE4',
+  '--aqua': '#00B4D8',
+  '--mint': '#64FFDA',
+  '--overlay-dark': 'rgba(0, 0, 0, 0.58)',
+}
+
+const LIGHT_VARS: Record<string, string> = {
+  '--abyss': '#FDFBF6',
+  '--deep': '#F4F0E8',
+  '--navy': '#EAF4F8',
+  '--ice': '#0A2E52',
+  '--cyan': '#245B78',
+  '--sky': '#0077B6',
+  '--aqua': '#00A6C8',
+  '--mint': '#007C70',
+  '--overlay-dark': 'rgba(255, 255, 255, 0.72)',
+}
+
 function getStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
@@ -18,10 +42,19 @@ function getStoredTheme(): Theme {
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement
+  const body = document.body
+  const vars = theme === 'light' ? LIGHT_VARS : DARK_VARS
 
   root.classList.toggle('light', theme === 'light')
   root.classList.toggle('dark', theme === 'dark')
   root.setAttribute('data-theme', theme)
+
+  Object.entries(vars).forEach(([key, value]) => {
+    root.style.setProperty(key, value)
+  })
+
+  body.style.backgroundColor = theme === 'light' ? '#FDFBF6' : '#03045E'
+  body.style.color = theme === 'light' ? '#0A2E52' : '#CAF0F8'
 
   try {
     localStorage.setItem(STORAGE_KEY, theme)
