@@ -1,11 +1,11 @@
-import { ExternalLink } from 'lucide-react'
+﻿import { ExternalLink } from 'lucide-react'
 
 export default function Footer() {
   return (
     <footer
       className="w-full"
       style={{
-        background: 'linear-gradient(135deg, #03045E 0%, #023E8A 40%, #0077B6 100%)',
+        background: 'var(--gradient-hero)',
         borderTop: '1px solid rgba(255,255,255,0.06)',
       }}
     >
@@ -61,3 +61,4 @@ export default function Footer() {
     </footer>
   )
 }
+

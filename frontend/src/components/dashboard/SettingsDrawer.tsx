@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ChevronDown, Check, CheckCircle, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { AI_MODELS } from './types';
@@ -107,7 +107,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSave, onDeleteAll, o
     setShowResetConfirm(false);
   };
 
-  // ─── Connection Tests ──────────────────────────────────────────────────
+  // â”€â”€â”€ Connection Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const runYouTubeTest = useCallback(async () => {
     setYtTest('testing');
@@ -496,7 +496,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSave, onDeleteAll, o
                   style={{
                     background: saved
                       ? 'linear-gradient(135deg, #38A169, #68D391)'
-                      : 'linear-gradient(135deg, #0077B6, #48CAE4)',
+                      : 'var(--gradient-button)',
                     color: '#FFFFFF',
                     fontFamily: "'Inter', sans-serif",
                   }}
@@ -663,3 +663,4 @@ export default function SettingsDrawer({ isOpen, onClose, onSave, onDeleteAll, o
     </AnimatePresence>
   );
 }
+

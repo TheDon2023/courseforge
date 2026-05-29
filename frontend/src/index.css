@@ -100,3 +100,123 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* ============================================================
+   CourseForge Dark Theme Override
+   Goal: dark mode = black backgrounds, gray gradients/buttons,
+   white text. Light theme remains unchanged.
+   ============================================================ */
+
+html.dark,
+html[data-theme="dark"],
+.dark {
+  --abyss: #000000 !important;
+  --deep: #080808 !important;
+  --navy: #121212 !important;
+  --azure: #2A2A2A !important;
+  --sky: #3A3A3A !important;
+  --cyan: #FFFFFF !important;
+  --ice: #FFFFFF !important;
+  --parchment: #000000 !important;
+  --sand: #1A1A1A !important;
+  --deep-ink: #FFFFFF !important;
+  --stone: #D1D5DB !important;
+  --muted: #D1D5DB !important;
+
+  --gradient-hero: linear-gradient(135deg, #000000 0%, #151515 45%, #3A3A3A 100%) !important;
+  --gradient-accent: linear-gradient(135deg, #3A3A3A 0%, #6B7280 100%) !important;
+  --gradient-card: linear-gradient(135deg, #0A0A0A 0%, #1F1F1F 100%) !important;
+  --gradient-button: linear-gradient(135deg, #4B5563 0%, #6B7280 100%) !important;
+  --overlay-dark: rgba(0, 0, 0, 0.78) !important;
+}
+
+html.dark body,
+html[data-theme="dark"] body,
+.dark body {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Make common text inherit white in dark mode, including hardcoded dark text. */
+html.dark,
+html.dark body,
+html.dark body *,
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+html[data-theme="dark"] body *,
+.dark,
+.dark * {
+  color: #FFFFFF;
+}
+
+/* Preserve semantic colored status text where needed. */
+html.dark .text-red-500,
+html.dark .text-red-400,
+html.dark [style*="#FF6B6B"] {
+  color: #FF6B6B !important;
+}
+
+html.dark .text-green-500,
+html.dark .text-emerald-500,
+html.dark [style*="#00FF00"] {
+  color: #00FF00 !important;
+}
+
+/* Convert white/light cards to black-gray cards in dark mode. */
+html.dark .bg-white,
+html.dark .bg-white\/60,
+html.dark .bg-white\/70,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark [class*="bg-white"] {
+  background-color: rgba(24, 24, 27, 0.92) !important;
+  color: #FFFFFF !important;
+}
+
+/* Convert common blue hardcoded panels/buttons into gray gradients in dark mode. */
+html.dark [style*="#03045E"],
+html.dark [style*="#07165C"],
+html.dark [style*="#0077B6"],
+html.dark [style*="#00B4D8"],
+html.dark [style*="#48CAE4"],
+html.dark [style*="#90E0EF"],
+html.dark [style*="#CAF0F8"] {
+  color: #FFFFFF !important;
+}
+
+/* Dark buttons: gray gradient with white text. */
+html.dark button,
+html.dark a[role="button"] {
+  color: #FFFFFF;
+}
+
+html.dark button[style*="linear-gradient"],
+html.dark a[style*="linear-gradient"] {
+  background: linear-gradient(135deg, #4B5563 0%, #6B7280 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* Inputs and modal fields in dark mode. */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: rgba(24, 24, 27, 0.95) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #D1D5DB !important;
+}
+
+/* Utility classes for future components. */
+html.dark .cf-dark-surface {
+  background: linear-gradient(135deg, #0A0A0A 0%, #1F1F1F 100%) !important;
+  color: #FFFFFF !important;
+}
+
+html.dark .cf-dark-button {
+  background: linear-gradient(135deg, #4B5563 0%, #6B7280 100%) !important;
+  color: #FFFFFF !important;
+}

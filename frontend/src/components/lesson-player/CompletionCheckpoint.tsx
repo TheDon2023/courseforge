@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { CheckCircle, Star, HelpCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -145,7 +145,7 @@ export default function CompletionCheckpoint({
             whileTap={{ scale: 0.98 }}
             className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-normal transition-all"
             style={{
-              background: 'linear-gradient(135deg, #0077B6, #48CAE4)',
+              background: 'var(--gradient-button)',
               color: '#FFFFFF',
               fontFamily: "'Inter', sans-serif",
               fontSize: '0.9375rem',
@@ -161,3 +161,4 @@ export default function CompletionCheckpoint({
     </div>
   )
 }
+

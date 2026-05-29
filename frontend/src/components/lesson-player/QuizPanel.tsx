@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, XCircle, Trophy, RotateCcw, Loader2, AlertTriangle, Sparkles, BookOpen, Target, TrendingUp, Brain } from 'lucide-react'
 import type { Quiz, QuizQuestion } from '../../types/course'
@@ -163,10 +163,10 @@ export default function QuizPanel({
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.25 }}
-      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto border-l border-white/10 bg-[#03045E] shadow-2xl"
+      className="fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto border-l border-white/10 bg-[var(--abyss)] shadow-2xl"
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#03045E]/95 px-6 py-4 backdrop-blur-sm">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[var(--abyss)]/95 px-6 py-4 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           {quizCompleted ? <Trophy size={20} className="text-yellow-400" /> : <BookOpen size={20} style={{ color: BRIGHT_GREEN }} />}
           <h2 className="text-lg font-semibold" style={{ color: BRIGHT_GREEN }}>
@@ -400,3 +400,4 @@ export default function QuizPanel({
     </motion.div>
   )
 }
+

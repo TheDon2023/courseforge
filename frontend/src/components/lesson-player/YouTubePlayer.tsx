@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Play, KeyRound, AlertCircle } from 'lucide-react'
 import type { Lesson } from './types'
 import type { Course } from './types'
@@ -67,7 +67,7 @@ export default function YouTubePlayer({ lesson, course }: YouTubePlayerProps) {
                 window.dispatchEvent(new CustomEvent('open-settings'))
               }}
               style={{
-                background: 'linear-gradient(135deg, #0077B6, #48CAE4)',
+                background: 'var(--gradient-button)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '8px',
@@ -249,3 +249,4 @@ export default function YouTubePlayer({ lesson, course }: YouTubePlayerProps) {
     </div>
   )
 }
+
