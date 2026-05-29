@@ -6,15 +6,18 @@ const STORAGE_KEY = 'courseforge_theme'
 const THEME_EVENT = 'courseforge-theme-change'
 
 const DARK_VARS: Record<string, string> = {
-  '--abyss': '#03045E',
-  '--deep': '#02033D',
-  '--navy': '#07165C',
-  '--ice': '#CAF0F8',
-  '--cyan': '#90E0EF',
-  '--sky': '#48CAE4',
-  '--aqua': '#00B4D8',
-  '--mint': '#64FFDA',
-  '--overlay-dark': 'rgba(0, 0, 0, 0.58)',
+  // Dark theme: black / gray / white while preserving existing gradients and layout.
+  '--abyss': '#000000',
+  '--deep': '#0B0B0B',
+  '--navy': '#151515',
+  '--ice': '#FFFFFF',
+  '--cyan': '#FFFFFF',
+  '--sky': '#E5E5E5',
+  '--aqua': '#D4D4D4',
+  '--mint': '#F5F5F5',
+  '--stone': '#D1D5DB',
+  '--deep-ink': '#000000',
+  '--overlay-dark': 'rgba(0, 0, 0, 0.72)',
 }
 
 const LIGHT_VARS: Record<string, string> = {
@@ -53,8 +56,8 @@ function applyTheme(theme: Theme) {
     root.style.setProperty(key, value)
   })
 
-  body.style.backgroundColor = theme === 'light' ? '#FDFBF6' : '#03045E'
-  body.style.color = theme === 'light' ? '#0A2E52' : '#CAF0F8'
+  body.style.backgroundColor = theme === 'light' ? '#FDFBF6' : '#000000'
+  body.style.color = theme === 'light' ? '#0A2E52' : '#FFFFFF'
 
   try {
     localStorage.setItem(STORAGE_KEY, theme)
@@ -110,3 +113,4 @@ export function useTheme() {
 
   return { theme, setTheme, toggleTheme }
 }
+
